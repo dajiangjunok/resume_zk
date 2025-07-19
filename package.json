@@ -15,7 +15,7 @@
     "clean": "rm -rf node_modules && rm -rf packages/*/node_modules",
     "install:all": "npm install",
     "web:dev": "npm run dev -w web",
-    "web:build": "npm run build -w web", 
+    "web:build": "npm run build -w web",
     "web:start": "npm run start -w web",
     "web:lint": "npm run lint -w web",
     "contracts:build": "npm run build -w contracts",
@@ -26,12 +26,15 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "typescript": "^5.0.0",
+    "eslint": "^8.0.0",
     "prettier": "^3.0.0",
-    "eslint": "^8.0.0"
+    "typescript": "^5.0.0"
   },
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
+  },
+  "dependencies": {
+    "@primuslabs/zktls-core-sdk": "^0.2.0"
   }
 }
