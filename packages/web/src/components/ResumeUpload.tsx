@@ -3,6 +3,8 @@
 import { useState, useCallback } from 'react'
 import { useAccount } from 'wagmi'
 import { Upload, FileText, AlertCircle, CheckCircle, Loader, Shield, ExternalLink } from 'lucide-react'
+import Cet4ZktlsComponent from './zktls/cet4_zktls'
+import DegreeZktlsComponent from './zktls/digree_zktls'
 
 interface UploadedFile {
   name: string
@@ -259,14 +261,8 @@ export function ResumeUpload() {
                       毕业年份: {resumeInfo.education.graduationYear}
                     </div>
                   </div>
-                  <button
-                    onClick={handleEducationVerification}
-                    className="flex items-center gap-1 bg-primary text-primary-foreground px-3 py-1 rounded-md text-xs hover:bg-primary/90 transition-colors"
-                  >
-                    <Shield className="w-3 h-3" />
-                    学信网验证
-                    <ExternalLink className="w-3 h-3" />
-                  </button>
+                  <DegreeZktlsComponent/>
+                  <Cet4ZktlsComponent/>
                 </div>
               </div>
             </div>
