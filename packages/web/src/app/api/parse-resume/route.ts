@@ -150,7 +150,7 @@ ${text}
         'X-Title': 'Resume Parser'
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3.5-sonnet',
+        model: process.env.NEXT_PUBLIC_AI_MODEL||'anthropic/claude-3.5-sonnet',
         messages: [
           {
             role: 'user',

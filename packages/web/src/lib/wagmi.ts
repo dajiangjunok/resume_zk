@@ -1,4 +1,4 @@
-import { mainnet, sepolia, type Chain } from 'wagmi/chains'
+import { type Chain } from 'wagmi/chains'
 import { getDefaultConfig } from '@rainbow-me/rainbowkit'
 
 // 定义Monadtest链
@@ -29,6 +29,6 @@ const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ''
 export const config = getDefaultConfig({
   appName: 'Resume ZK',
   projectId,
-  chains: [monadtest, mainnet, sepolia],
+  chains: [monadtest],
   ssr: true,
 })

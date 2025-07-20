@@ -5,6 +5,9 @@
 import { PrimusZKTLS } from '@primuslabs/zktls-js-sdk';
 import { Shield, ExternalLink, Loader2, CheckCircle } from 'lucide-react';
 import { useState } from 'react';
+import { useAccount } from 'wagmi';
+import { useStoreCredential } from '@/hooks/useResumeZK';
+import { CredentialType } from '@/lib/resumezk-contract';
 
 interface Cet4ZktlsProps {
   isVerified?: boolean;
@@ -56,6 +59,8 @@ export default function Cet4ZktlsComponent({
   onErrorMessageChange,
 }: Cet4ZktlsProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { address, isConnected } = useAccount();
+  const { storeCredential, isPending: isStoring } = useStoreCredential();
 
   const primusProof = async (): Promise<void> => {
     // 检查是否提供了姓名
@@ -193,6 +198,21 @@ export default function Cet4ZktlsComponent({
         onErrorMessageChange(''); // 验证成功，清除错误信息
       }
 
+      // 如果验证成功且用户连接钱包，存储到区块链
+      if (finalResult && isConnected && attestation) {
+        try {
+          const dataHash = JSON.stringify({
+            name: cetDataObj?.xm || name,
+            verified: true,
+            timestamp: Date.now()
+          });
+
+          storeCredential(CredentialType.CET4, dataHash);
+        } catch (error) {
+          console.error('存储到区块链失败:', error);
+        }
+      }
+
       // 通过回调函数通知父组件验证结果
       if (onVerificationChange) {
         onVerificationChange(finalResult);
@@ -219,7 +239,7 @@ export default function Cet4ZktlsComponent({
   return (
     <button
       onClick={primusProof}
-      disabled={isLoading || isVerified}
+      disabled={isLoading || isVerified || isStoring}
       className={`group relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
         isVerified
           ? 'bg-gradient-to-r from-green-600 to-emerald-700 text-white'
@@ -235,7 +255,7 @@ export default function Cet4ZktlsComponent({
           <Shield className="w-4 h-4 group-hover:rotate-6 transition-transform duration-200" />
         )}
         <span className="relative">
-          {isLoading ? '验证中...' : isVerified ? '已验证' : 'CET 4/6 级验证'}
+          {isLoading ? '验证中...' : isStoring ? '存储中...' : isVerified ? '已验证' : 'CET 4/6 级验证'}
         </span>
         {!isLoading && !isVerified && (
           <ExternalLink className="w-3 h-3 opacity-70 group-hover:opacity-100 transition-opacity duration-200" />

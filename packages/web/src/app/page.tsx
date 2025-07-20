@@ -81,7 +81,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t bg-background/95 backdrop-blur mt-16">
         <div className="container mx-auto px-4 py-8 text-center text-muted-foreground">
-          <p>© 2024 Resume ZK. 基于Monad测试网构建</p>
+          <p>Resume ZK. 基于Monad测试网构建</p>
         </div>
       </footer>
     </div>

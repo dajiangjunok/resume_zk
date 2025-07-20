@@ -2,11 +2,13 @@
 
 import { useState, useCallback } from 'react'
 import { useAccount } from 'wagmi'
-import { Upload, FileText, AlertCircle, CheckCircle, Loader, Shield, ExternalLink } from 'lucide-react'
+import { Upload, FileText, AlertCircle, CheckCircle, Loader, Shield, Lock } from 'lucide-react'
 import Cet4ZktlsComponent from './zktls/Cet4Zktls'
 import DegreeZktlsComponent from './zktls/DigreeZktls'
 import { parseResumeFile, validateResumeFile } from '../lib/resume-parser'
 import { ShareButton } from './ShareButton'
+import { useSubmitResume } from '@/hooks/useResumeZK'
+import { keccak256, toBytes } from 'viem'
 
 interface UploadedFile {
   name: string
@@ -57,6 +59,10 @@ export function ResumeUpload() {
   const [cetVerified, setCetVerified] = useState(false)
   const [degreeError, setDegreeError] = useState('')
   const [cetError, setCetError] = useState('')
+  
+  // 区块链提交状态
+  const [isSubmittedToBlockchain, setIsSubmittedToBlockchain] = useState(false)
+  const { submitResume, isPending: isSubmitting, isConfirming, isSuccess, error: submitError } = useSubmitResume()
 
   const handleFileUpload = useCallback(async (file: File) => {
     // 使用新的文件验证函数
@@ -79,6 +85,7 @@ export function ResumeUpload() {
       // 使用新的简历解析功能
       const parsedInfo = await parseResumeFile(file)
       setResumeInfo(parsedInfo)
+      setIsSubmittedToBlockchain(false) // 重置区块链提交状态
     } catch (error) {
       console.error('简历解析失败:', error)
       alert(error instanceof Error ? error.message : '解析失败，请重试')
@@ -115,6 +122,36 @@ export function ResumeUpload() {
       handleFileUpload(files[0])
     }
   }, [handleFileUpload])
+
+  // 提交简历到区块链
+  const handleSubmitToBlockchain = useCallback(() => {
+    if (!resumeInfo) return
+    
+    try {
+      // 生成简历哈希 - 基于简历内容的哈希
+      const resumeContent = JSON.stringify(resumeInfo)
+      const resumeHash = keccak256(toBytes(resumeContent))
+      
+      // 生成 Merkle 根 - 这里简化处理，实际应用中会包含更复杂的结构
+      const merkleData = {
+        personalInfo: resumeInfo.personalInfo,
+        education: resumeInfo.education,
+        timestamp: Date.now()
+      }
+      const merkleRoot = keccak256(toBytes(JSON.stringify(merkleData)))
+      
+      // 提交到区块链
+      submitResume(resumeHash, merkleRoot)
+    } catch (error) {
+      console.error('生成哈希失败:', error)
+      alert('提交失败: ' + (error instanceof Error ? error.message : '未知错误'))
+    }
+  }, [resumeInfo, submitResume])
+  
+  // 监听提交成功状态
+  if (isSuccess && !isSubmittedToBlockchain) {
+    setIsSubmittedToBlockchain(true)
+  }
 
   if (!isConnected) {
     return (
@@ -198,11 +235,65 @@ export function ResumeUpload() {
           <div className="border rounded-lg p-4 md:p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg md:text-xl font-semibold">简历信息</h3>
-              <ShareButton 
-                resumeData={resumeInfo} 
-                className="scale-90"
-              />
+              <div className="flex items-center gap-2">
+                {/* 区块链提交按钮 */}
+                <button
+                  onClick={handleSubmitToBlockchain}
+                  disabled={isSubmitting || isConfirming || isSubmittedToBlockchain}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    isSubmittedToBlockchain
+                      ? 'bg-green-600 text-white cursor-default'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed'
+                  }`}
+                >
+                  {isSubmitting || isConfirming ? (
+                    <Loader className="w-4 h-4 animate-spin" />
+                  ) : isSubmittedToBlockchain ? (
+                    <CheckCircle className="w-4 h-4" />
+                  ) : (
+                    <Lock className="w-4 h-4" />
+                  )}
+                  <span className="hidden sm:inline">
+                    {isSubmitting
+                      ? '提交中...'
+                      : isConfirming
+                      ? '确认中...'
+                      : isSubmittedToBlockchain
+                      ? '已上链'
+                      : '上链存储'
+                    }
+                  </span>
+                </button>
+                
+                {/* <ShareButton 
+                  resumeData={resumeInfo} 
+                  className="scale-90"
+                /> */}
+              </div>
             </div>
+            
+            {/* 区块链状态提示 */}
+            {submitError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center gap-2 text-red-700">
+                  <AlertCircle className="w-4 h-4" />
+                  <span className="text-sm font-medium">上链失败</span>
+                </div>
+                <p className="text-sm text-red-600 mt-1">{submitError.message}</p>
+              </div>
+            )}
+            
+            {isSubmittedToBlockchain && (
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center gap-2 text-green-700">
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="text-sm font-medium">简历已成功存储到区块链</span>
+                </div>
+                <p className="text-sm text-green-600 mt-1">
+                  您的简历数据已被安全地存储在 Monad 测试网上，具有不可篡改的特性。
+                </p>
+              </div>
+            )}
             
             {/* 个人信息 */}
             <div className="mb-6">
@@ -359,6 +450,59 @@ export function ResumeUpload() {
                 </div>
               </div>
             )}
+            
+            {/* 区块链验证状态总结 */}
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                区块链验证状态
+              </h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span>简历数据上链:</span>
+                  <span className={`flex items-center gap-1 ${
+                    isSubmittedToBlockchain ? 'text-green-600' : 'text-gray-500'
+                  }`}>
+                    {isSubmittedToBlockchain ? (
+                      <><CheckCircle className="w-3 h-3" /> 已完成</>
+                    ) : (
+                      <><AlertCircle className="w-3 h-3" /> 待完成</>
+                    )}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>学历验证:</span>
+                  <span className={`flex items-center gap-1 ${
+                    degreeVerified ? 'text-green-600' : 'text-gray-500'
+                  }`}>
+                    {degreeVerified ? (
+                      <><CheckCircle className="w-3 h-3" /> 已验证</>
+                    ) : (
+                      <><AlertCircle className="w-3 h-3" /> 待验证</>
+                    )}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>CET验证:</span>
+                  <span className={`flex items-center gap-1 ${
+                    cetVerified ? 'text-green-600' : 'text-gray-500'
+                  }`}>
+                    {cetVerified ? (
+                      <><CheckCircle className="w-3 h-3" /> 已验证</>
+                    ) : (
+                      <><AlertCircle className="w-3 h-3" /> 待验证</>
+                    )}
+                  </span>
+                </div>
+              </div>
+              
+              {/* 完整验证提示 */}
+              {isSubmittedToBlockchain && degreeVerified && cetVerified && (
+                <div className="mt-3 p-2 bg-green-100 border border-green-300 rounded text-green-800 text-sm">
+                  🎉 恭喜！您的简历已完成完整的区块链验证流程
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
