@@ -24,7 +24,7 @@ export const monadtest: Chain = {
   testnet: true,
 }
 
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ''
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'm89f61yfqM-Yk2WMpMwq3liE8Hn2RdUr'
 
 export const config = getDefaultConfig({
   appName: 'Resume ZK',
