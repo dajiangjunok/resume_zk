@@ -188,15 +188,15 @@ export function ResumeUpload() {
           type="file"
           id="resume-upload"
           className="hidden"
-          accept=".pdf,.doc,.docx"
+          accept=".doc,.docx"
           onChange={handleFileInput}
         />
         <label htmlFor="resume-upload" className="cursor-pointer">
           <Upload className="w-8 md:w-12 h-8 md:h-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-base md:text-lg font-semibold mb-2">上传您的简历</h3>
           <p className="text-sm md:text-base text-muted-foreground mb-4 px-2">
-            <span className="hidden sm:inline">将PDF或DOC文件拖拽到此处，或点击选择文件</span>
-            <span className="sm:hidden">点击选择PDF或DOC文件</span>
+            <span className="hidden sm:inline">将DOCX或DOC文件拖拽到此处，或点击选择文件</span>
+            <span className="sm:hidden">点击选择DOCX或DOC文件</span>
           </p>
           <div className="gradient-bg text-white px-4 md:px-6 py-2 rounded-lg font-medium inline-block hover:opacity-90 transition-opacity text-sm md:text-base">
             选择文件
