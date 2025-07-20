@@ -94,8 +94,6 @@ npm run build        # 构建合约
 npm run test         # 运行测试
 npm run test:verbose # 详细测试输出
 npm run coverage     # 测试覆盖率
-npm run deploy:sepolia  # 部署到Sepolia测试网
-npm run deploy:mainnet  # 部署到主网
 npm run clean        # 清理构建文件
 npm run fmt          # 格式化代码
 npm run lint         # 代码检查
@@ -136,8 +134,3 @@ cp packages/contracts/.env.example packages/contracts/.env
 前端应用可以部署到Vercel、Netlify等平台。
 
 ### 智能合约部署
-使用Foundry部署到指定网络:
-```bash
-npm run contracts:deploy:sepolia  # 测试网部署
-npm run contracts:deploy:mainnet  # 主网部署
-```
