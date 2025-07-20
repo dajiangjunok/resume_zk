@@ -9,9 +9,6 @@ resume_zk/
 ├── packages/
 │   ├── web/               # Next.js 前端应用
 │   ├── contracts/         # Foundry 智能合约
-│   ├── ui/                # 共享UI组件
-│   ├── types/             # 共享TypeScript类型
-│   └── utils/             # 共享工具函数
 └── docs/                  # 文档
 ```
 
