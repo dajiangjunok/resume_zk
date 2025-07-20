@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useAccount } from 'wagmi'
 import { Upload, FileText, AlertCircle, CheckCircle, Loader, Shield, Lock } from 'lucide-react'
 import Cet4ZktlsComponent from './zktls/Cet4Zktls'
@@ -48,8 +48,14 @@ interface ResumeInfo {
 }
 
 export function ResumeUpload() {
-  const { isConnected } = useAccount()
+  const [mounted, setMounted] = useState(false)
+  const account = useAccount()
+  const isConnected = mounted ? account.isConnected : false
   const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   const [isProcessing, setIsProcessing] = useState(false)
   const [resumeInfo, setResumeInfo] = useState<ResumeInfo | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)

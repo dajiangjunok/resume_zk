@@ -2,9 +2,16 @@
 
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
+import { useEffect, useState } from 'react'
 
 export function Header() {
-  const { isConnected } = useAccount()
+  const [mounted, setMounted] = useState(false)
+  const account = useAccount()
+  const isConnected = mounted ? account.isConnected : false
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

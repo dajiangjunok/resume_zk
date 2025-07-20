@@ -1,10 +1,13 @@
 import { Header } from '@/components/Header'
 import { ResumeUpload } from '@/components/ResumeUpload'
+import { ClientOnly } from '@/components/ClientOnly'
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <Header />
+      <ClientOnly>
+        <Header />
+      </ClientOnly>
       
       <main className="container mx-auto px-4 py-8 pt-24">
         {/* Hero Section */}
@@ -40,7 +43,9 @@ export default function Home() {
               </p>
             </div>
             
-            <ResumeUpload />
+            <ClientOnly>
+              <ResumeUpload />
+            </ClientOnly>
           </div>
         </div>
 
