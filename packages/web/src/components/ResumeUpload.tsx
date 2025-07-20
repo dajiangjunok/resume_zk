@@ -3,8 +3,10 @@
 import { useState, useCallback } from 'react'
 import { useAccount } from 'wagmi'
 import { Upload, FileText, AlertCircle, CheckCircle, Loader, Shield, ExternalLink } from 'lucide-react'
-import Cet4ZktlsComponent from './zktls/cet4_zktls'
-import DegreeZktlsComponent from './zktls/digree_zktls'
+import Cet4ZktlsComponent from './zktls/Cet4Zktls'
+import DegreeZktlsComponent from './zktls/DigreeZktls'
+import { parseResumeFile, validateResumeFile } from '../lib/resume-parser'
+import { ShareButton } from './ShareButton'
 
 interface UploadedFile {
   name: string
@@ -25,6 +27,8 @@ interface ResumeInfo {
     university: string
     graduationYear: string
     major: string
+    gpa?: string
+    englishLevel?: string
   }
   experience: {
     company: string
@@ -33,6 +37,12 @@ interface ResumeInfo {
     description: string
   }[]
   skills: string[]
+  certifications?: string[]
+  languages?: {
+    language: string
+    level: string
+    certification: string
+  }[]
 }
 
 export function ResumeUpload() {
@@ -41,10 +51,18 @@ export function ResumeUpload() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [resumeInfo, setResumeInfo] = useState<ResumeInfo | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
+  
+  // 验证状态管理
+  const [degreeVerified, setDegreeVerified] = useState(false)
+  const [cetVerified, setCetVerified] = useState(false)
+  const [degreeError, setDegreeError] = useState('')
+  const [cetError, setCetError] = useState('')
 
   const handleFileUpload = useCallback(async (file: File) => {
-    if (!file.type.includes('pdf') && !file.type.includes('doc')) {
-      alert('请上传PDF或DOC格式的简历文件')
+    // 使用新的文件验证函数
+    const validationError = validateResumeFile(file)
+    if (validationError) {
+      alert(validationError)
       return
     }
 
@@ -57,62 +75,20 @@ export function ResumeUpload() {
     setUploadedFile(fileInfo)
     setIsProcessing(true)
 
-    // 模拟解析简历信息
-    setTimeout(() => {
-      setResumeInfo({
-        personalInfo: {
-          name: '张三',
-          email: 'zhangsan@example.com',
-          phone: '13800138000',
-          location: '北京市海淀区'
-        },
-        education: {
-          degree: '计算机科学与技术学士',
-          university: '清华大学',
-          graduationYear: '2020',
-          major: '计算机科学与技术'
-        },
-        experience: [
-          {
-            company: '字节跳动',
-            position: '前端开发工程师',
-            duration: '2020.07 - 2023.08',
-            description: '负责前端业务开发，使用React、TypeScript等技术栈'
-          },
-          {
-            company: '阿里巴巴',
-            position: '高级前端开发工程师',
-            duration: '2023.09 - 至今',
-            description: '负责核心业务前端架构设计和开发'
-          }
-        ],
-        skills: ['React', 'TypeScript', 'Node.js', 'Python', 'AWS', 'Vue.js', 'JavaScript']
-      })
-      setIsProcessing(false)
-    }, 2000)
-  }, [])
-
-  const handleEducationVerification = useCallback(async () => {
     try {
-      // 这里集成Primus SDK进行学信网验证
-      // 根据docs/primus.md的示例代码
-      alert('正在跳转到学信网进行学历验证...')
-      
-      // 实际实现中这里会调用Primus SDK
-      // const primusZKTLS = new PrimusZKTLS()
-      // const appId = "YOUR_APPID"
-      // await primusZKTLS.init(appId)
-      // const attTemplateID = "XUEXIN_TEMPLATE_ID"
-      // const userAddress = address // 从wagmi获取
-      // const request = primusZKTLS.generateRequestParams(attTemplateID, userAddress)
-      // ... 继续验证流程
-      
-      console.log('Education verification initiated')
+      // 使用新的简历解析功能
+      const parsedInfo = await parseResumeFile(file)
+      setResumeInfo(parsedInfo)
     } catch (error) {
-      console.error('Education verification failed:', error)
-      alert('学历验证失败，请重试')
+      console.error('简历解析失败:', error)
+      alert(error instanceof Error ? error.message : '解析失败，请重试')
+      setResumeInfo(null)
+    } finally {
+      setIsProcessing(false)
     }
   }, [])
+
+ 
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -220,7 +196,13 @@ export function ResumeUpload() {
       {resumeInfo && !isProcessing && (
         <div className="space-y-4">
           <div className="border rounded-lg p-4 md:p-6">
-            <h3 className="text-lg md:text-xl font-semibold mb-4">简历信息</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg md:text-xl font-semibold">简历信息</h3>
+              <ShareButton 
+                resumeData={resumeInfo} 
+                className="scale-90"
+              />
+            </div>
             
             {/* 个人信息 */}
             <div className="mb-6">
@@ -249,20 +231,60 @@ export function ResumeUpload() {
             <div className="mb-6">
               <h4 className="font-semibold text-primary mb-3 text-sm md:text-base">🎓 教育背景</h4>
               <div className="border rounded-lg p-4 bg-secondary/20">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <div className="font-medium text-sm md:text-base mb-1">
-                      {resumeInfo.education.degree}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
+                <div className="space-y-2">
+                  <div className="font-medium text-sm md:text-base">
+                    {resumeInfo.education.degree}
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap justify-between">
+                    <span className="text-sm text-muted-foreground">
                       {resumeInfo.education.university} • {resumeInfo.education.major}
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      毕业年份: {resumeInfo.education.graduationYear}
+                    </span>
+                    <div className="scale-75">
+                      <DegreeZktlsComponent
+                        isVerified={degreeVerified}
+                        onVerificationChange={setDegreeVerified}
+                        name={resumeInfo.personalInfo.name}
+                        errorMessage={degreeError}
+                        onErrorMessageChange={setDegreeError}
+                      />
                     </div>
                   </div>
-                  <DegreeZktlsComponent/>
-                  <Cet4ZktlsComponent/>
+                  {degreeError && (
+                    <div className="text-xs text-red-600 mt-1 p-2 bg-red-50 rounded border-l-2 border-red-200">
+                      ⚠️ {degreeError}
+                    </div>
+                  )}
+                  <div className="text-xs text-muted-foreground">
+                    毕业年份: {resumeInfo.education.graduationYear}
+                  </div>
+                  {resumeInfo.education.gpa && (
+                    <div className="text-xs text-muted-foreground">
+                      GPA: {resumeInfo.education.gpa}
+                    </div>
+                  )}
+                  {resumeInfo.education.englishLevel && (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 justify-between">
+                        <span className="text-xs text-green-600 font-medium">
+                          英语水平: {resumeInfo.education.englishLevel}
+                        </span>
+                        <div className="scale-75">
+                          <Cet4ZktlsComponent
+                            isVerified={cetVerified}
+                            onVerificationChange={setCetVerified}
+                            name={resumeInfo.personalInfo.name}
+                            errorMessage={cetError}
+                            onErrorMessageChange={setCetError}
+                          />
+                        </div>
+                      </div>
+                      {cetError && (
+                        <div className="text-xs text-red-600 p-2 bg-red-50 rounded border-l-2 border-red-200">
+                          ⚠️ {cetError}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -285,7 +307,7 @@ export function ResumeUpload() {
             </div>
 
             {/* 技能标签 */}
-            <div>
+            <div className="mb-6">
               <h4 className="font-semibold text-primary mb-3 text-sm md:text-base">🛠️ 技能</h4>
               <div className="flex flex-wrap gap-1 md:gap-2">
                 {resumeInfo.skills.map((skill: string, index: number) => (
@@ -298,6 +320,45 @@ export function ResumeUpload() {
                 ))}
               </div>
             </div>
+
+            {/* 证书 */}
+            {resumeInfo.certifications && resumeInfo.certifications.length > 0 && (
+              <div className="mb-6">
+                <h4 className="font-semibold text-primary mb-3 text-sm md:text-base">📜 证书</h4>
+                <div className="flex flex-wrap gap-1 md:gap-2">
+                  {resumeInfo.certifications.map((cert: string, index: number) => (
+                    <span
+                      key={index}
+                      className="bg-green-100 text-green-700 px-2 md:px-3 py-1 rounded-full text-xs md:text-sm"
+                    >
+                      {cert}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 语言能力 */}
+            {resumeInfo.languages && resumeInfo.languages.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-primary mb-3 text-sm md:text-base">🌐 语言能力</h4>
+                <div className="space-y-2">
+                  {resumeInfo.languages.map((lang, index) => (
+                    <div key={index} className="border rounded-lg p-3 bg-blue-50/50">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-sm">{lang.language}</span>
+                        <span className="text-xs text-blue-600">{lang.level}</span>
+                      </div>
+                      {lang.certification && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {lang.certification}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
