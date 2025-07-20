@@ -1,8 +1,8 @@
 {
-  "buildCommand": "cd packages/web && npm run build",
+  "buildCommand": "npm run build",
   "outputDirectory": "packages/web/.next",
   "installCommand": "npm install",
-  "devCommand": "cd packages/web && npm run dev",
+  "devCommand": "npm run dev",
   "framework": null,
   "functions": {
     "packages/web/src/app/api/*/route.ts": {
