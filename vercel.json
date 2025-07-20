@@ -1,0 +1,18 @@
+{
+  "buildCommand": "cd packages/web && npm run build",
+  "outputDirectory": "packages/web/.next",
+  "installCommand": "npm install",
+  "devCommand": "cd packages/web && npm run dev",
+  "framework": null,
+  "functions": {
+    "packages/web/src/app/api/*/route.ts": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/packages/web/$1"
+    }
+  ]
+}

@@ -24,7 +24,7 @@ export default function ResumeContractDemo() {
 
   const [resumeHash, setResumeHash] = useState('')
   const [merkleRoot, setMerkleRoot] = useState('')
-  const [credentialData, setCredentialData] = useState('')
+  const [credentialDataInput, setCredentialDataInput] = useState('')
   const [selectedCredType, setSelectedCredType] = useState<CredentialType>(CredentialType.DEGREE)
   const [queryResumeHash, setQueryResumeHash] = useState('')
 
@@ -32,7 +32,7 @@ export default function ResumeContractDemo() {
   const { data: resumeData, isLoading: isLoadingResume } = getResume(queryResumeHash)
   
   // 查询用户凭证
-  const { data: credentialData: userCred, isLoading: isLoadingCred } = getUserCredential(address, selectedCredType)
+  const { data: credentialData, isLoading: isLoadingCred } = getUserCredential(address, selectedCredType)
   
   // 查询是否有凭证
   const { data: hasUserCred, isLoading: isLoadingHasCred } = hasCredential(address, selectedCredType)
@@ -50,8 +50,8 @@ export default function ResumeContractDemo() {
   }
 
   const handleStoreCredential = () => {
-    if (credentialData) {
-      storeCredential.storeCredential(selectedCredType, credentialData)
+    if (credentialDataInput) {
+      storeCredential.storeCredential(selectedCredType, credentialDataInput)
     }
   }
 
@@ -122,8 +122,8 @@ export default function ResumeContractDemo() {
               </select>
               <Input
                 placeholder="凭证数据 (JSON字符串)"
-                value={credentialData}
-                onChange={(e) => setCredentialData(e.target.value)}
+                value={credentialDataInput}
+                onChange={(e) => setCredentialDataInput(e.target.value)}
               />
               <Button 
                 onClick={handleStoreCredential}
@@ -219,14 +219,14 @@ export default function ResumeContractDemo() {
               )}
               
               {isLoadingCred && <p>加载凭证详情中...</p>}
-              {userCred && (
+              {credentialData && (
                 <div className="p-4 bg-gray-50 rounded">
                   <h4 className="font-medium mb-2">凭证详情:</h4>
-                  <p>类型: {CredentialType[userCred.credType]}</p>
-                  <p>数据哈希: {userCred.dataHash}</p>
-                  <p>时间戳: {new Date(Number(userCred.timestamp) * 1000).toLocaleString()}</p>
-                  <p>已验证: <Badge variant={userCred.verified ? "default" : "secondary"}>
-                    {userCred.verified ? "是" : "否"}
+                  <p>类型: {CredentialType[credentialData.credType]}</p>
+                  <p>数据哈希: {credentialData.dataHash}</p>
+                  <p>时间戳: {new Date(Number(credentialData.timestamp) * 1000).toLocaleString()}</p>
+                  <p>已验证: <Badge variant={credentialData.verified ? "default" : "secondary"}>
+                    {credentialData.verified ? "是" : "否"}
                   </Badge></p>
                 </div>
               )}

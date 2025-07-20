@@ -1,4 +1,4 @@
-import { Address } from 'wagmi'
+import { type Address } from 'viem'
 
 export const RESUME_ZK_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_RESUME_ZK_CONTRACT_ADDRESS as Address
 

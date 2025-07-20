@@ -201,8 +201,25 @@ export default function Cet4ZktlsComponent({
       // 如果验证成功且用户连接钱包，存储到区块链
       if (finalResult && isConnected && attestation) {
         try {
+          let certName = name;
+          
+          // 尝试从attestation数据中获取姓名
+          try {
+            if (attestation.data) {
+              const attestationDataObj: AttestationData = JSON.parse(attestation.data);
+              if (attestationDataObj && typeof attestationDataObj.data === 'string') {
+                const cetDataObj: CETData = JSON.parse(attestationDataObj.data);
+                if (cetDataObj.xm) {
+                  certName = cetDataObj.xm;
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('解析attestation数据失败:', e);
+          }
+          
           const dataHash = JSON.stringify({
-            name: cetDataObj?.xm || name,
+            name: certName,
             verified: true,
             timestamp: Date.now()
           });
